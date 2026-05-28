@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Perm's LABO">
+<title>Perm's LABO ストレート式 — Open Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f5f0e0;
+  --bg2:     #ede8d8;
+  --surface: #ffffff;
+  --surface2:#f8f4e8;
+  --border:  #d8cfa8;
+  --border2: #c8b888;
+  --text:    #1a1208;
+  --muted:   #7a6a40;
+  --light:   #f0ead8;
+  --black:   #0a0808;
+
+  /* ブランドカラー */
+  --gold:    #c8a860;
+  --gold2:   #a88840;
+  --gold3:   #f0e8c8;
+
+  /* 薬剤カラー */
+  --c1: #d09060;   /* モーブオレンジ */
+  --c2: #70a8c0;   /* モーブ水色 */
+  --c3: #d070a0;   /* ピンク */
+  --c4: #9060c0;   /* 紫 */
+  --c5: #282018;   /* 黒（REPLEX） */
+  --b1: #b8a040;   /* モーブイエロー GMT70 */
+  --b2: #282018;   /* 黒（REPLEX） */
+
+  /* 成分カラー */
+  --tga-c:   #c06040;
+  --cahcl-c: #7060c0;
+  --tgr-c:   #409080;
+  --gmt-c:   #a09030;
+
+  --sans: 'BIZ UDGothic', 'Noto Sans JP', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html, body, .main { background:var(--bg); }
+body { color:var(--text); font-family:var(--sans); min-height:100vh; padding-bottom:60px; }
+
+/* ── ヘッダー ── */
+header {
+  background:var(--black);
+  border-bottom:1px solid #2a2010;
+  padding:28px 20px 22px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+header::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, var(--gold2), var(--gold), var(--b1), var(--gold));
+}
+.header-perms {
+  font-family:Georgia, serif;
+  font-style:italic; font-size:18px; font-weight:400;
+  color:var(--gold); letter-spacing:.08em; margin-bottom:2px;
+}
+.header-labo {
+  font-family:'BIZ UDGothic', sans-serif;
+  font-size:44px; font-weight:700; letter-spacing:.28em;
+  color:var(--gold); line-height:1; margin-bottom:6px;
+  text-shadow: 0 0 40px rgba(200,168,96,.2);
+}
+.header-rule {
+  width:40px; height:1px; background:var(--gold); margin:8px auto;
+  opacity:.6;
+}
+.header-sub1 {
+  font-size:11px; letter-spacing:.18em; color:rgba(200,168,96,.7);
+  margin-bottom:3px;
+}
+.header-sub2 {
+  font-size:9px; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--gold); margin-bottom:6px;
+}
+.header-credit { font-size:9px; letter-spacing:.12em; color:rgba(200,168,96,.5); }
+
+/* ── メイン ── */
+.main { max-width:600px; margin:0 auto; padding:22px 16px 0; }
+
+.sec-label {
+  font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:12px;
+  display:flex; align-items:center; gap:10px;
+}
+.sec-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.type-label {
+  font-size:9px; font-weight:700; letter-spacing:.16em;
+  color:var(--muted); margin-bottom:8px; margin-top:4px;
+  display:flex; align-items:center; gap:8px;
+}
+.type-label::after { content:''; flex:1; height:1px; background:var(--border); opacity:.6; }
+
+/* ── 薬剤カード ── */
+.drug-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px; }
+.drug-grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:20px; }
+
+.drug-card {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:10px; padding:11px 8px 10px;
+  cursor:pointer; transition:all .18s;
+  text-align:center; user-select:none; position:relative;
+}
+.drug-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(200,168,96,.15); }
+.drug-card.selected { border-color:var(--card-color); background:var(--surface2); }
+.dc-pip {
+  position:absolute; top:5px; right:5px;
+  width:8px; height:8px; border-radius:50%;
+  background:var(--card-color,var(--gold)); opacity:0; transition:opacity .15s;
+}
+.drug-card.selected .dc-pip { opacity:1; }
+.dc-dot {
+  width:36px; height:36px; border-radius:50%;
+  background:var(--card-color,var(--gold));
+  margin:0 auto 7px; opacity:.85;
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:9px; font-weight:700;
+  transition:opacity .15s; line-height:1.2; text-align:center;
+}
+.drug-card.selected .dc-dot { opacity:1; }
+.dc-name { font-size:11px; font-weight:700; color:var(--text); margin-bottom:2px; line-height:1.3; }
+.dc-sub  { font-size:8px; color:var(--muted); margin-bottom:3px; }
+.dc-conc { font-family:var(--mono); font-size:10px; color:var(--card-color,var(--muted)); font-weight:500; }
+
+/* ── スロット ── */
+.slot-row {
+  background:var(--surface); border:1.5px solid var(--border); border-radius:8px;
+  padding:10px 14px; margin-bottom:7px;
+  display:flex; align-items:center; gap:10px;
+}
+.slot-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.slot-info { flex:1; min-width:0; }
+.slot-name { font-size:12px; font-weight:700; margin-bottom:1px; }
+.slot-conc { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.slot-inp {
+  width:50px; background:var(--light); border:1.5px solid var(--border);
+  border-radius:4px; padding:6px 8px; font-family:var(--mono); font-size:17px;
+  font-weight:500; text-align:center; outline:none; color:var(--text); transition:border-color .15s;
+}
+.slot-inp:focus { border-color:var(--gold); }
+.slot-colon { font-family:var(--mono); font-size:13px; color:var(--border2); }
+.slot-del { background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; padding:0 4px; flex-shrink:0; }
+.slot-del:hover { color:#c05030; }
+
+.boost-row {
+  background:var(--surface); border:1.5px solid var(--border); border-radius:8px;
+  padding:10px 14px; margin-bottom:7px;
+  display:flex; align-items:center; gap:10px;
+}
+.boost-pct-inp {
+  width:58px; background:var(--light); border:1.5px solid var(--border);
+  border-radius:4px; padding:6px 8px; font-family:var(--mono); font-size:16px;
+  font-weight:500; text-align:center; outline:none; color:var(--text); transition:border-color .15s;
+}
+.boost-pct-inp:focus { border-color:var(--gold); }
+
+.empty-slots {
+  background:var(--surface2); border:1.5px dashed var(--border); border-radius:8px;
+  padding:14px; text-align:center; color:var(--muted); font-size:12px;
+  line-height:1.8; margin-bottom:8px;
+}
+
+/* ── 入力フィールド ── */
+.field {
+  background:var(--surface); border:1.5px solid var(--border); border-radius:8px;
+  padding:14px 18px 12px; margin-bottom:14px; transition:border-color .15s;
+}
+.field:focus-within { border-color:var(--gold); }
+.field label { display:block; font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--muted); margin-bottom:7px; }
+.field-row { display:flex; align-items:baseline; gap:6px; }
+.field-row input { flex:1; background:none; border:none; color:var(--text); font-family:var(--mono); font-size:28px; font-weight:500; outline:none; min-width:0; }
+.field-row input::placeholder { color:var(--border2); }
+.field-unit { font-family:var(--mono); font-size:14px; color:var(--muted); }
+
+/* ── ボタン ── */
+.calc-btn {
+  width:100%; background:var(--black); color:var(--gold); border:1.5px solid var(--gold2);
+  border-radius:8px; padding:16px; font-size:14px; font-weight:700; letter-spacing:.14em;
+  cursor:pointer; transition:all .18s; margin-bottom:12px;
+}
+.calc-btn:hover { background:var(--gold2); color:#fff; transform:translateY(-1px); box-shadow:0 6px 20px rgba(200,168,96,.25); }
+.calc-btn:disabled { opacity:.3; cursor:not-allowed; transform:none; }
+
+.reset-btn {
+  width:100%; background:none; border:1.5px solid var(--border); border-radius:8px;
+  padding:10px; color:var(--muted); font-size:12px; font-weight:700;
+  cursor:pointer; transition:all .15s; margin-bottom:20px;
+}
+.reset-btn:hover { border-color:var(--gold); color:var(--gold2); }
+
+/* ── 結果 ── */
+.result-panel {
+  border:1.5px solid var(--border); border-radius:12px; overflow:hidden;
+  margin-bottom:20px; display:none; opacity:0; transform:translateY(8px);
+  transition:opacity .3s, transform .3s;
+}
+.result-panel.visible { display:block; }
+.result-panel.show { opacity:1; transform:translateY(0); }
+
+.res-hero {
+  background:var(--black); padding:20px 24px;
+  border-bottom:1px solid var(--gold2);
+}
+.res-hero-label { font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:rgba(200,168,96,.6); margin-bottom:5px; }
+.res-hero-val { font-family:var(--mono); font-size:46px; font-weight:500; color:var(--gold); line-height:1; }
+.res-hero-unit { font-size:16px; color:rgba(200,168,96,.5); margin-left:4px; }
+
+.res-amounts {
+  background:var(--light); padding:12px 16px;
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  border-bottom:1px solid var(--border);
+}
+.res-amt {
+  background:var(--surface); border-radius:8px; padding:11px 13px;
+  border-left:3px solid var(--item-color,var(--gold));
+}
+.res-amt-label { font-size:11px; font-weight:700; color:var(--item-color,var(--gold2)); margin-bottom:3px; line-height:1.3; }
+.res-amt-val { font-family:var(--mono); font-size:22px; font-weight:500; }
+.res-amt-unit { font-size:11px; color:var(--muted); margin-left:2px; }
+.res-amt-pct { font-size:9px; color:var(--muted); margin-top:2px; }
+
+.res-conc { background:var(--surface); padding:14px 18px; }
+.res-conc-title { font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.res-conc-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+.res-ci { background:var(--light); border-radius:6px; padding:10px 12px; }
+.res-ci-label { font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
+.res-ci-val { font-family:var(--mono); font-size:17px; font-weight:500; }
+.res-ci-unit { font-size:10px; color:var(--muted); margin-left:2px; }
+.res-ci-zero { opacity:.3; }
+
+/* ── 注意事項 ── */
+.notice {
+  background:var(--surface); border:1px solid var(--border); border-radius:8px;
+  padding:16px 18px; margin-bottom:20px;
+}
+.notice-title { font-size:11px; font-weight:700; color:var(--gold2); margin-bottom:10px; letter-spacing:.1em; }
+.notice p { font-size:10px; color:var(--muted); line-height:2.0; margin-bottom:6px; }
+.notice p:last-child { margin-bottom:0; }
+
+/* ── Toast ── */
+#toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--black); color:var(--gold); padding:10px 22px; border-radius:20px; font-size:12px; opacity:0; transition:all .3s; z-index:9000; white-space:nowrap; pointer-events:none; border:1px solid var(--gold2); }
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<header>
+  <div class="header-perms">Perm's</div>
+  <div class="header-labo">LABO</div>
+  <div class="header-rule"></div>
+  <div class="header-sub1">ストレート式　Open Calculator</div>
+  <div class="header-sub2">Straight Type</div>
+  <div class="header-credit">監修 QUANTIFY BEAUTY</div>
+</header>
+
+<div class="main">
+
+  <!-- STEP1 ベース剤 -->
+  <div class="sec-label" style="margin-top:4px">STEP 1　ベース剤を選択（最大4種）</div>
+
+  <div class="type-label">化粧品登録ベース剤</div>
+  <div class="drug-grid" id="base-grid"></div>
+
+  <div class="type-label" style="margin-top:8px">添加剤（還元剤なし）</div>
+  <div class="drug-grid" style="grid-template-columns:1fr;max-width:180px" id="add-grid"></div>
+
+  <!-- STEP2 比率 -->
+  <div class="sec-label">STEP 2　混合比率を入力</div>
+  <div id="base-slots">
+    <div class="empty-slots">上のカードからベース剤を選択してください（最大4種）</div>
+  </div>
+
+  <!-- STEP3 添加剤 -->
+  <div class="sec-label">STEP 3　添加剤を選択（任意・最大2種）</div>
+  <div class="drug-grid-2" id="boost-grid"></div>
+  <div id="boost-slots" style="margin-bottom:20px"></div>
+
+  <!-- STEP4 総量 -->
+  <div class="sec-label">STEP 4　仕上がり総量を入力</div>
+  <div class="field" style="margin-bottom:20px">
+    <label>今から使用する薬剤の量</label>
+    <div class="field-row">
+      <input type="number" id="total-inp" placeholder="100" min="1" oninput="onInput()">
+      <span class="field-unit">g</span>
+    </div>
+  </div>
+
+  <button class="calc-btn" id="calc-btn" onclick="calculate()" disabled>計　算</button>
+  <button class="reset-btn" onclick="resetAll()">✕　リセット</button>
+
+  <!-- 結果 -->
+  <div class="result-panel" id="result-panel">
+    <div id="err-box" style="display:none;background:#fff5f0;padding:14px 18px;font-size:12px;color:#c05030;line-height:1.7;border-top:2px solid #e0a080"></div>
+    <div id="ok-box">
+      <div class="res-hero">
+        <div class="res-hero-label">Total Reducer Concentration</div>
+        <div style="display:flex;align-items:baseline;gap:4px">
+          <span class="res-hero-val" id="res-total">—</span>
+          <span class="res-hero-unit">%</span>
+        </div>
+      </div>
+      <div class="res-amounts" id="res-amounts"></div>
+      <div class="res-conc">
+        <div class="res-conc-title">各成分　混合後濃度</div>
+        <div class="res-conc-grid">
+          <div class="res-ci"><div class="res-ci-label" style="color:var(--tga-c)">TGA チオグリコール酸</div><div class="res-ci-val" style="color:var(--tga-c)"><span id="rc-tga">—</span><span class="res-ci-unit">%</span></div></div>
+          <div class="res-ci"><div class="res-ci-label" style="color:var(--cahcl-c)">CAhcl システアミンHCL</div><div class="res-ci-val" style="color:var(--cahcl-c)"><span id="rc-cahcl">—</span><span class="res-ci-unit">%</span></div></div>
+          <div class="res-ci"><div class="res-ci-label" style="color:var(--tgr-c)">TGr チオグリセリン</div><div class="res-ci-val" style="color:var(--tgr-c)"><span id="rc-tgr">—</span><span class="res-ci-unit">%</span></div></div>
+          <div class="res-ci"><div class="res-ci-label" style="color:var(--gmt-c)">GMT</div><div class="res-ci-val" style="color:var(--gmt-c)"><span id="rc-gmt">—</span><span class="res-ci-unit">%</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 注意事項 -->
+  <div class="notice">
+    <div class="notice-title">■ 本ツールについての重要事項</div>
+    <p>・本ツールは、各メーカー様が公表されている薬剤スペックをもとに、混合時の還元剤濃度を計算するための補助ツールです。</p>
+    <p>・本ツールは、各メーカー様による公式な認証・後援を受けたものではありません。本ツールの内容について、各メーカー様は一切の責任を負うものではありません。</p>
+    <p>・本ツール上に表示される濃度・成分情報は推計値を含みます。正確な値については、必ず各メーカー様の製品資料・指示に従ってください。</p>
+    <p>・本ツールの利用により生じたいかなる結果についても、運営者（株式会社ImU／Quantify-Beauty）は責任を負いません。ご利用は施術者の責任のもとお願いいたします。</p>
+    <p>・本ツール内で言及される製品名・商品名は、各メーカー様の商標・登録商標です。本ツールはこれらの製品を識別する目的のみで使用しており、商標権者との商業的関係を示すものではありません。</p>
+  </div>
+
+</div>
+
+<script>
+// ================================================================
+// 薬剤マスタ
+// ================================================================
+const BASE_DRUGS = [
+  { id:'l55',  name:'LABO1 クリーム5.5', sub:'化粧品', tga:2.0, cahcl:4.0, tgr:0,   gmt:0, color:'var(--c1)', icon:'5.5' },
+  { id:'l40',  name:'LABO1 クリーム4.0', sub:'化粧品', tga:2.0, cahcl:4.0, tgr:0,   gmt:0, color:'var(--c2)', icon:'4.0' },
+  { id:'l65',  name:'LABO1 クリーム6.5', sub:'化粧品', tga:2.0, cahcl:4.5, tgr:1.5, gmt:0, color:'var(--c3)', icon:'6.5' },
+  { id:'l90',  name:'LABO1 クリーム9.0', sub:'化粧品', tga:2.0, cahcl:4.5, tgr:1.5, gmt:0, color:'var(--c4)', icon:'9.0' },
+  { id:'rep',  name:'REPLEX',            sub:'添加剤 0%', tga:0, cahcl:0,   tgr:0,   gmt:0, color:'var(--c5)', icon:'RP'  },
+];
+const BOOST_DRUGS = [
+  { id:'gmt70', name:'LABO GMT70', sub:'化粧品 添加剤', tga:0, cahcl:0, tgr:0, gmt:70.0, color:'var(--b1)', icon:'GMT' },
+  { id:'rep2',  name:'REPLEX',     sub:'添加剤 0%',     tga:0, cahcl:0, tgr:0, gmt:0,    color:'var(--b2)', icon:'RP'  },
+];
+
+function totDrug(d){ return d.tga+d.cahcl+d.tgr+d.gmt; }
+
+const MAX_BASE=4, MAX_BOOST=2;
+let selBase=[], selBoost=[];
+
+// ================================================================
+// カード描画
+// ================================================================
+function renderGrids(){
+  const baseOnly  = BASE_DRUGS.slice(0,4);
+  const addOnly   = BASE_DRUGS.slice(4,5);
+  document.getElementById('base-grid').innerHTML = baseOnly.map(d=>drugCardHTML(d,'base')).join('');
+  document.getElementById('add-grid').innerHTML  = addOnly.map(d=>drugCardHTML(d,'base')).join('');
+  document.getElementById('boost-grid').innerHTML = BOOST_DRUGS.map(d=>drugCardHTML(d,'boost')).join('');
+}
+
+function drugCardHTML(d, type){
+  const isSel = type==='base' ? selBase.some(s=>s.drug.id===d.id) : selBoost.some(s=>s.drug.id===d.id);
+  const tot   = totDrug(d);
+  const dotStyle = d.id==='rep'||d.id==='rep2' ? `background:${d.color};border:1px solid #444;` : `background:${d.color};`;
+  const textCol  = d.id==='rep'||d.id==='rep2' ? 'color:#888' : 'color:#fff';
+  return `<div class="drug-card ${isSel?'selected':''}" style="--card-color:${d.color}" onclick="toggle${type==='base'?'Base':'Boost'}('${d.id}')">
+    <div class="dc-pip"></div>
+    <div class="dc-dot" style="${dotStyle};${textCol}">${d.icon}</div>
+    <div class="dc-name">${d.name}</div>
+    <div class="dc-sub">${d.sub}</div>
+    <div class="dc-conc">${tot.toFixed(1)}%</div>
+  </div>`;
+}
+
+function renderBaseSlots(){
+  const el = document.getElementById('base-slots');
+  if(!selBase.length){
+    el.innerHTML='<div class="empty-slots">上のカードからベース剤を選択してください（最大4種）</div>';
+    return;
+  }
+  el.innerHTML = selBase.map((s,i)=>`
+    <div class="slot-row">
+      <div class="slot-dot" style="background:${s.drug.color}"></div>
+      <div class="slot-info">
+        <div class="slot-name" style="color:${s.drug.color}">${s.drug.name}</div>
+        <div class="slot-conc">${totDrug(s.drug).toFixed(1)}%</div>
+      </div>
+      <input type="number" class="slot-inp" value="${s.ratio}" min="0"
+             oninput="updateBaseRatio(${i},this.value)">
+      ${i<selBase.length-1?'<span class="slot-colon">：</span>':''}
+      <button class="slot-del" onclick="removeBase(${i})">✕</button>
+    </div>`).join('');
+}
+
+function renderBoostSlots(){
+  const el = document.getElementById('boost-slots');
+  if(!selBoost.length){ el.innerHTML=''; return; }
+  el.innerHTML = selBoost.map((s,i)=>`
+    <div class="boost-row">
+      <div class="slot-dot" style="background:${s.drug.color}${s.drug.id==='rep2'?';border:1px solid #888':''}"></div>
+      <div class="slot-info">
+        <div class="slot-name" style="color:${s.drug.id==='rep2'?'var(--muted)':s.drug.color}">${s.drug.name}</div>
+        <div class="slot-conc">${totDrug(s.drug).toFixed(1)}%</div>
+      </div>
+      <input type="number" class="boost-pct-inp" value="${s.pct}" min="0" step="0.1"
+             oninput="updateBoostPct(${i},this.value)">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">%</span>
+      <button class="slot-del" onclick="removeBoost(${i})">✕</button>
+    </div>`).join('');
+}
+
+// ================================================================
+// 選択操作
+// ================================================================
+function toggleBase(id){
+  const drug = BASE_DRUGS.find(d=>d.id===id);
+  const idx  = selBase.findIndex(s=>s.drug.id===id);
+  if(idx>=0){ selBase.splice(idx,1); }
+  else {
+    if(selBase.length>=MAX_BASE){ toast(`ベース剤は最大${MAX_BASE}種です`); return; }
+    selBase.push({drug, ratio:1});
+  }
+  renderGrids(); renderBaseSlots(); updateCalcBtn(); resetResult();
+}
+
+function toggleBoost(id){
+  const drug = BOOST_DRUGS.find(d=>d.id===id);
+  const idx  = selBoost.findIndex(s=>s.drug.id===id);
+  if(idx>=0){ selBoost.splice(idx,1); }
+  else {
+    if(selBoost.length>=MAX_BOOST){ toast(`添加剤は最大${MAX_BOOST}種です`); return; }
+    selBoost.push({drug, pct:5});
+  }
+  renderGrids(); renderBoostSlots(); updateCalcBtn(); resetResult();
+}
+
+function removeBase(i){ selBase.splice(i,1); renderGrids(); renderBaseSlots(); updateCalcBtn(); resetResult(); }
+function removeBoost(i){ selBoost.splice(i,1); renderGrids(); renderBoostSlots(); updateCalcBtn(); resetResult(); }
+function updateBaseRatio(i,v){ selBase[i].ratio=parseFloat(v)||0; resetResult(); }
+function updateBoostPct(i,v){ selBoost[i].pct=parseFloat(v)||0; resetResult(); }
+function onInput(){ updateCalcBtn(); resetResult(); }
+
+function updateCalcBtn(){
+  const T = parseFloat(document.getElementById('total-inp').value);
+  document.getElementById('calc-btn').disabled = !(selBase.length>=1 && T>0);
+}
+
+// ================================================================
+// 計算
+// ================================================================
+function calculate(){
+  const T = parseFloat(document.getElementById('total-inp').value);
+  if(!T||T<=0) return;
+  const sumR = selBase.reduce((a,s)=>a+(s.ratio||0),0);
+  if(sumR===0){ showErr('比率の合計が0です'); return; }
+
+  const boostTotalPct = selBoost.reduce((a,s)=>a+(s.pct||0),0);
+  const baseTotal = T / (1 + boostTotalPct/100);
+
+  const baseAmts  = selBase.map(s=>({ drug:s.drug, amt:baseTotal*(s.ratio||0)/sumR }));
+  const boostAmts = selBoost.map(s=>({ drug:s.drug, amt:baseTotal*(s.pct||0)/100 }));
+  const allAmts   = [...baseAmts, ...boostAmts];
+
+  let pure = { tga:0, cahcl:0, tgr:0, gmt:0 };
+  allAmts.forEach(a=>{
+    pure.tga   += a.amt*a.drug.tga/100;
+    pure.cahcl += a.amt*a.drug.cahcl/100;
+    pure.tgr   += a.amt*a.drug.tgr/100;
+    pure.gmt   += a.amt*a.drug.gmt/100;
+  });
+
+  const totalConc = Object.values(pure).reduce((a,v)=>a+v,0)/T*100;
+
+  const panel = document.getElementById('result-panel');
+  panel.classList.add('visible');
+  setTimeout(()=>panel.classList.add('show'),10);
+  document.getElementById('err-box').style.display='none';
+  document.getElementById('ok-box').style.display='block';
+  document.getElementById('res-total').textContent = totalConc.toFixed(3);
+
+  document.getElementById('res-amounts').innerHTML = allAmts.map(a=>{
+    const isZero = totDrug(a.drug)===0;
+    const col    = a.drug.id==='rep'||a.drug.id==='rep2' ? 'var(--muted)' : a.drug.color;
+    return `<div class="res-amt" style="--item-color:${col}">
+      <div class="res-amt-label">${a.drug.name}</div>
+      <div><span style="font-family:var(--mono);font-size:22px;font-weight:500">${a.amt.toFixed(1)}</span><span class="res-amt-unit">g</span></div>
+      <div class="res-amt-pct">${(a.amt/T*100).toFixed(1)}%${isZero?' / 還元剤0%':''}</div>
+    </div>`;
+  }).join('');
+
+  ['tga','cahcl','tgr','gmt'].forEach(k=>{
+    const el = document.getElementById('rc-'+k);
+    const val= pure[k]/T*100;
+    el.textContent = val.toFixed(3);
+    el.closest('.res-ci').classList.toggle('res-ci-zero', val===0);
+  });
+
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function showErr(msg){
+  const panel=document.getElementById('result-panel');
+  panel.classList.add('visible','show');
+  document.getElementById('err-box').style.display='block';
+  document.getElementById('err-box').textContent='⚠ '+msg;
+  document.getElementById('ok-box').style.display='none';
+}
+
+function resetResult(){
+  document.getElementById('result-panel').classList.remove('visible','show');
+}
+
+function resetAll(){
+  selBase=[]; selBoost=[];
+  document.getElementById('total-inp').value='';
+  renderGrids(); renderBaseSlots(); renderBoostSlots();
+  resetResult(); updateCalcBtn();
+}
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+renderGrids();
+renderBaseSlots();
+</script>
+</body>
+</html>
